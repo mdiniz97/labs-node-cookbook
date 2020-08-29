@@ -8,13 +8,13 @@ const maxData = 2 * 1024 * 1024
 
 http.createServer((req, res) => {
   if (req.method === 'GET') {
-  get(res)
-  return
+    get(res)
+    return
   }
   if (req.method === 'POST') {
-    post(res)
+    post(req, res)
     return
-    }
+  }
   reject(405, 'Method Not Allowed', res)
 }).listen(8080)
 
@@ -39,25 +39,25 @@ function post (req, res) {
   }
   const buffer = Buffer.allocUnsafe(size)
   var pos = 0
-    req
-      .on('data', (chunk) => {
-        const offset = pos + chunk.length
-        if (offset > size) {
-          reject(413, 'Too Large', res)
-          return
-        }
-        chunk.copy(buffer, pos)
-        pos = offset
-      })
-      .on('end', () => {
-        if (pos !== size) {
-          reject(400, 'Bad Request', res)
-          return
-        }
-        const data = qs.parse(buffer.toString())
-        console.log('User Posted: ', data)
-        res.end('You Posted: ' + JSON.stringify(data))
-      })
+  req
+    .on('data', (chunk) => {
+      const offset = pos + chunk.length
+      if (offset > size) {
+        reject(413, 'Too Large', res)
+        return
+      }
+      chunk.copy(buffer, pos)
+      pos = offset
+    })
+    .on('end', () => {
+      if (pos !== size) {
+        reject(400, 'Bad Request', res)
+        return
+      }
+      const data = qs.parse(buffer.toString())
+      console.log('User Posted: ', data)
+      res.end('You Posted: ' + JSON.stringify(data))
+    })
 }
 
 function reject (code, msg, res) {
